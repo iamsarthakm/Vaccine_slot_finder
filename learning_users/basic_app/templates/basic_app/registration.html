@@ -1,0 +1,38 @@
+{% extends "basic_app/base.html" %}
+
+{% block body_block %}
+
+
+<div class="container my-5">
+  {% if registered %}
+  <h1>Please Log In Now </h1>
+  {% else %}
+
+
+  <div class="form-group container col-4 mt-20 border p-5 rounded">
+    <h2>Register Here</h2>
+    <form enctype="multipart/form-data" method="POST">
+      {% csrf_token %}
+
+      {{ profile_form.as_p }}
+
+
+
+      <input type="submit" class="btn btn-dark btn-lg mt-1" name="" value="Register">
+    </form>
+
+    <p class="mt-4">Existing User? <a href="{% url 'basic_app:user_login' %}">Log In Now</a></p>
+  </div>
+
+</div>
+
+
+
+
+{% endif %}
+
+
+
+
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'basic_app/base.html' %}
+{% block body_block %}
+
+
+<div class="container-fluid mt-5">
+
+
+
+
+  <div class="container col-4 mt-20 border p-5 rounded">
+
+    <form method="post" action="{% url 'basic_app:user_login' %}">
+      {% csrf_token %}
+      <h2>Log In</h2>
+      <div class="my-3">
+        <label for="username" class="form-label">Email address</label>
+        <input type="email" name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+        <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="exampleInputPassword1" class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" id="exampleInputPassword1">
+      </div>
+      <button type="submit" name="" value="Login" class="btn btn-primary">Submit</button>
+      <p class="mt-4">New User? <a href="{% url 'basic_app:register' %}">Sign Up Now </a></p>
+    </form>
+    {% block content %}{% endblock %}
+
+  </div>
+
+
+
+
+  {% endblock %}

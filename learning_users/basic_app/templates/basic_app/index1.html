@@ -1,0 +1,228 @@
+{% extends "basic_app/base.html" %}
+{% block body_block %}
+
+<!--  -->
+<!-- FOR JUMBOTRON -->
+<!--  -->
+
+{% if user.is_authenticated %}
+
+<script>
+    function booked(center, date, vaccine, block_name, slot) {
+        // api call
+        var beneficiaryId = document.getElementById("bid")
+        var strUser = beneficiaryId.options[beneficiaryId.selectedIndex].text;
+        var strUser = beneficiaryId.value;
+        var strUser = parseInt(strUser)
+        console.log('strUser', strUser);
+        console.log('beneficiaryId', beneficiaryId)
+        fetch("/basic_app/slot_booking/",
+            {
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+                },
+                method: "POST",
+                body: JSON.stringify(
+                    {
+                        beneficiary: strUser,
+                        slot_timings: slot,
+                        center,
+                        date,
+                        vaccine,
+                        block: block_name,
+                    })
+            })
+.then(function(res){ console.log(res) })
+.catch(function(res){ console.log(res) })
+//         // alert(center)
+    }
+</script>
+
+<div class="jumbotron mt-4">
+    <h1 class="display-4">Hello {{ user.username }}!</h1>
+    <p class="lead">Get Vaccinated Today. Find your Slot for getting started</p>
+    <p class="lead">Click the time slot link for booking a vaccine slot</p>
+    <a class="btn btn-dark btn-lg" href="{% url 'basic_app:add_beneficiary' %}" role="button">Add Beneficiary</a>
+</div>
+
+{% else %}
+
+<div class="jumbotron mt-4">
+    <h1 class="display-4">Hello User!!</h1>
+    <p class="lead">Get Vaccinated Today. Please Log In for getting started</p>
+    <hr class="my-4">
+
+    <p class="lead">
+        <a class="btn btn-dark btn-lg" href="{% url 'basic_app:user_login' %}" role="button">Log In</a>
+        <a class="btn btn-dark btn-lg" href="{% url 'basic_app:register' %}" role="button">Sign Up</a>
+    </p>
+</div>
+
+{% endif %}
+
+<!--  -->
+<!-- FOR DISPLAYING BENEFICIARIES SLOT DETAILS -->
+<!--  -->
+{% if showSlot %}
+<!-- na -->
+{% else %}
+{% if user.is_authenticated %}
+
+<p class='lead'><b>Slot Booking details: </b> </p>
+<table class='table table-bordered table-striped'>
+    <thead class="thead-dark">
+        <tr>
+            <th class="border">Date</th>
+            <th class="border">Center Name</th>
+            <th class="border">Block Name</th>
+            <th class="border">Slot Timings</th>
+            <th class="border">Beneficiary Name</th>
+            <th class="border">Vaccine</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        {% for slot in slot_info %}
+        {% if slot %}
+        <tr>
+            <td class="table-info">{{slot.date}}</td>
+            <td class="table-info">{{slot.center}}</td>
+            <td class="table-info">{{slot.block_name}}</td>
+            <td class="table-info">{{slot.slot_timings}}</td>
+            <td class="table-info">{{slot.beneficiary_id}}</td>
+            <td class="table-info">{{slot.vaccine_type}}</td>
+
+        </tr>
+        {% else %}
+        <!-- na -->
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+
+
+<!-- na -->
+
+{% endif %}
+{% endif %}
+
+<!--  -->
+<!-- FOR DISPLAYING RESULTS BASED ON DEFAULT PINCODE OR SEARCH RESULTS -->
+<!--  -->
+
+{% if user.is_authenticated %}
+
+
+
+<form method="POST" action="{% url 'basic_app:slot_booking' %}">
+    {% csrf_token %}
+
+    <div class="dropdown">
+        <label for="beneficiary">
+            <p class='lead mt-3'><b>For <b>{{ user.username }}</b>, Choose a beneficiary for booking from slots given below: </b> </p>
+        </label>
+        <select name="beneficiary" id = "bid" class="btn btn-secondary dropdown-toggle" type="input">
+            {% for beneficiary in beneficiaries %}
+            <option value="{{beneficiary.beneficiary_id}}">{{beneficiary.name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% if centers.centers %}
+    <table class='table table-bordered table-striped'>
+        <thead class="thead-dark">
+            <tr>
+                <th class="border">Center No.</th>
+                <th class="border">Center Name</th>
+                <th class="border">Block Name</th>
+                <th class="border">Pincode</th>
+                <th class="border">Timing</th>
+                <th class="border">Fees Type</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for center in centers.centers %}
+            <tr>
+                <th class="table-danger" scope="row">{{forloop.counter}}</th>
+                <td class="table-danger">{{center.name}}</td>
+                <td class="table-danger">{{center.block_name}}</td>
+                <td class="table-danger">{{center.pincode}}</td>
+                <td class="table-danger">{{center.from}} - {{center.to}}</td>
+                <td class="table-danger">{{center.fee_type}}</td>
+                <thead>
+                    <th class="table-secondary">Capacity</th>
+                    <th class="table-secondary">Minimum Age Limit</th>
+                    <th class="table-secondary">Vaccine</th>
+                    <th class="table-secondary">Date</th>
+                    <th class="table-secondary">Slots (click on one to book)</th>
+                    <th class="table-danger"></th>
+                </thead>
+                {% if center.sessions %}
+                {% for session in center.sessions %}
+                <p></p>
+                <tbody>
+                    <tr>
+                        <td class="table-info">{{session.available_capacity}}</td>
+                        <td class="table-info">{{session.min_age_limit}}</td>
+                        <td class="table-info">{{session.vaccine}}</td>
+                        <td class="table-info">{{session.date}}</td>
+        
+                        <input type="hidden" id="date_id" name="date" value="{{session.date}}">
+                        <input type="hidden" id="center_id" name="center" value="{{center.name}}">
+                        <input type="hidden" id="vaccine_id" name="vaccine" value="{{session.vaccine}}">
+                        <input type="hidden" id="block_id" name="block" value="{{center.block_name}}">
+                        <td class="table-info">
+                            {% if session.slots %}
+                                {% for slot in session.slots %}
+                                {{beneficiary.name}}
+                                <!-- {{center.name}} -->
+                                <!-- temp_center = {{center.name}} -->
+                                <!-- {{slot}} -->
+                                    <!-- <input class="btn btn-link" id="slot_id" name="slot_timings" value="{{slot}}"> -->
+                                    <a href="" onclick="booked('{{center.name}}', '{{session.date}}', '{{session.vaccine}}', '{{center.block_name}}', '{{slot}}')"> {{slot}} </a>
+                                    <!-- <button class="btn-primary" value={{slot}}></button> -->
+                                {% endfor %}
+                            {% else %}
+                            {% endif %}</td>
+                        <td class='table-danger'></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% else %}
+                {% endif %}
+            </tr>
+            {% endfor %}
+            {% else %}
+            <p>No data found.</p>
+            {% endif %}
+        </tbody>
+    </table>
+    {% endif %}
+</form>
+
+
+
+
+<!-- na -->
+
+<!-- <script type="text/javascript">
+    function booked() {
+var centerName = [ab , as ,as ,aa, ];   //declare an array
+var BlockName = [];
+var vaccine = [];
+var date = [];
+var value1 = document.getElementById("myTextInput").value;
+var value1 = document.getElementById("myTextInput").value;
+var value1 = document.getElementById("myTextInput").value;
+var value1 = document.getElementById("myTextInput").value;
+var value1 = document.getElementById("myTextInput").value;  //get the value of an element by it's id
+myFormData.push(value1);
+    }
+</script> -->
+
+
+
+{% endblock %}
